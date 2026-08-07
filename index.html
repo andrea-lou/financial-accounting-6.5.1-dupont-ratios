@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuPont Line Chart Dashboard</title>
+  <style>
+    :root{
+      --bg:#f6f9ff;
+      --panel:#ffffff;
+      --text:#0b1f33;
+      --muted:#5b6b7f;
+      --line:#d8e2f0;
+      --shadow:0 14px 40px rgba(9,65,131,.10);
+      --blue:#094183;
+      --blue2:#006FFF;
+      --rose:#A30046;
+      --pink:#FF1E55;
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(132,184,255,.25), transparent 28%),
+        radial-gradient(circle at top right, rgba(255,170,188,.20), transparent 24%),
+        linear-gradient(180deg, #fff 0%, var(--bg) 100%);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:1240px;
+      margin:0 auto;
+      padding:28px 20px 40px;
+    }
+    .hero{
+      display:grid;
+      grid-template-columns:1.35fr .95fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+    .card{
+      background:var(--panel);
+      border:1px solid rgba(9,65,131,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .title-card{padding:24px}
+    .formula-card{padding:18px}
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 12px;
+      border-radius:999px;
+      background:rgba(9,65,131,.08);
+      color:var(--blue);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+    h1{
+      margin:14px 0 10px;
+      font-size:clamp(28px, 3.3vw, 42px);
+      line-height:1.08;
+      color:var(--blue);
+    }
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.55;
+      max-width:72ch;
+    }
+    .formula-label{
+      margin:0 0 10px;
+      font-size:13px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:700;
+    }
+    .formula{
+      font-size:clamp(18px, 2.1vw, 26px);
+      line-height:1.45;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .formula span{
+      display:inline-block;
+      white-space:nowrap;
+      margin:0 2px;
+    }
+    .blue{color:var(--blue2)}
+    .navy{color:var(--blue)}
+    .rose{color:var(--rose)}
+    .pink{color:var(--pink)}
+    .formula-sub{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .main-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:18px;
+      align-items:start;
+    }
+    .control-card{
+      padding:20px;
+    }
+    .head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:baseline;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .head h2, .right-card h2{
+      margin:0;
+      font-size:20px;
+      color:var(--blue);
+    }
+    .head p, .right-card p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .selector{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .selector label{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px 12px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      cursor:pointer;
+      user-select:none;
+      font-size:14px;
+      line-height:1.2;
+      background:#fff;
+    }
+    .selector input{accent-color:var(--blue)}
+    .selector .at{border-color:rgba(0,111,255,.35)}
+    .selector .oe{border-color:rgba(9,65,131,.35)}
+    .selector .ie{border-color:rgba(163,0,70,.35)}
+    .selector .lv{border-color:rgba(255,30,85,.35)}
+
+    .slider-shell{
+      padding:16px;
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(132,184,255,.12), rgba(255,170,188,.06));
+      border:1px solid rgba(9,65,131,.08);
+    }
+    .slider-row{
+      display:grid;
+      grid-template-columns:170px 1fr 84px;
+      gap:14px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .slider-row:last-child{margin-bottom:0}
+    .metric-name{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .metric-name strong{
+      font-size:15px;
+      line-height:1.25;
+    }
+    .metric-name small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.25;
+    }
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      display:inline-block;
+      margin-right:8px;
+      vertical-align:middle;
+    }
+    input[type="range"]{
+      width:100%;
+      appearance:none;
+      height:14px;
+      background:transparent;
+      margin:0;
+      outline:none;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:12px;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(9,65,131,.08), rgba(0,111,255,.22));
+      border:1px solid rgba(9,65,131,.10);
+    }
+    input[type="range"]::-moz-range-track{
+      height:12px;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(9,65,131,.08), rgba(0,111,255,.22));
+      border:1px solid rgba(9,65,131,.10);
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      appearance:none;
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:3px solid #fff;
+      box-shadow:0 4px 14px rgba(9,65,131,.30);
+      background:var(--blue2);
+      margin-top:-7px;
+      cursor:pointer;
+    }
+    input[type="range"]::-moz-range-thumb{
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:3px solid #fff;
+      box-shadow:0 4px 14px rgba(9,65,131,.30);
+      background:var(--blue2);
+      cursor:pointer;
+    }
+    .slider-wrap[data-active="false"] input[type="range"]{
+      opacity:.45;
+      pointer-events:none;
+      filter:grayscale(.5);
+    }
+    .value-pill{
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      min-width:84px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:#f4f8ff;
+      border:1px solid var(--line);
+      font-variant-numeric:tabular-nums;
+      font-weight:800;
+    }
+
+    .right-card{
+      padding:18px;
+      display:grid;
+      gap:14px;
+    }
+    .topline{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .tag{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .tag.flat{background:rgba(91,107,127,.10); color:var(--muted)}
+    .tag.up{background:rgba(11,122,59,.10); color:#0b7a3b}
+    .tag.down{background:rgba(180,35,24,.10); color:#b42318}
+
+    .chart-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .chart-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      background:#fff;
+    }
+    .chart-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+    .chart-head strong{font-size:15px}
+    .chart-head span{
+      font-variant-numeric:tabular-nums;
+      font-weight:800;
+    }
+    svg.chart{
+      width:100%;
+      height:180px;
+      display:block;
+      overflow:visible;
+    }
+    .gridline{
+      stroke:rgba(91,107,127,.14);
+      stroke-width:1;
+    }
+    .line{
+      fill:none;
+      stroke-width:3.5;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+    .area{stroke:none}
+    .point{
+      stroke:#fff;
+      stroke-width:3;
+    }
+    .cross{
+      stroke-width:1.5;
+      stroke-dasharray:4 4;
+      opacity:.5;
+    }
+    .chart-meta{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+      font-variant-numeric:tabular-nums;
+    }
+
+    .insight-card{
+      margin-top:18px;
+      padding:20px;
+    }
+    .insight-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+      gap:12px;
+    }
+    .summary-box{
+      border-radius:18px;
+      padding:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      min-height:92px;
+    }
+    .summary-box .label{
+      display:inline-block;
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      margin-bottom:6px;
+    }
+    .summary-box .num{
+      font-size:24px;
+      font-weight:800;
+      line-height:1.1;
+      font-variant-numeric:tabular-nums;
+      margin-bottom:8px;
+    }
+    .summary-box .change{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .footer-note{
+      margin-top:2px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    @media (max-width: 1020px){
+      .hero, .main-grid, .insight-grid{grid-template-columns:1fr}
+      .selector{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .slider-row{grid-template-columns:1fr}
+      .value-pill{justify-self:start}
+    }
+    @media (max-width:560px){
+      .wrap{padding:16px 12px 28px}
+      .selector{grid-template-columns:1fr}
+      .title-card, .control-card, .right-card, .insight-card, .formula-card{padding:16px}
+      .chart-grid{grid-template-columns:1fr}
+      h1{font-size:28px}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <article class="card title-card">
+        <div class="eyebrow">Interactive DuPont trade-off simulator</div>
+        <h1>Move one ratio, watch the other three respond</h1>
+        <p class="subtitle">
+          This dashboard starts from the lesson's benchmark values and applies simple, realistic trade-offs.
+          The goal is to show that improving one DuPont component can move the others in the opposite direction.
+        </p>
+      </article>
+
+      <article class="card formula-card" aria-label="DuPont formula">
+        <p class="formula-label">Live formula</p>
+        <div class="formula" aria-live="polite">
+          <span class="navy">Return on Equity</span> =
+          <span class="blue">Asset turnover</span> x
+          <span class="navy">Operating efficiency</span> x
+          <span class="rose">Interest efficiency</span> x
+          <span class="pink">Leverage</span>
+        </div>
+        <p class="formula-sub">Abbreviations: ROE = AT x OE x IE x L.</p>
+        <p class="footer-note" id="formulaValue">Current ROE: 36.9%</p>
+      </article>
+    </section>
+
+    <section class="main-grid">
+      <article class="card control-card">
+        <div class="head">
+          <div>
+            <h2>Choose the ratio to change</h2>
+            <p>Select one control, then drag its line. The other three update automatically.</p>
+          </div>
+        </div>
+
+        <fieldset style="border:0; padding:0; margin:0;">
+          <legend class="sr-only" style="position:absolute; left:-9999px;">Active ratio</legend>
+          <div class="selector" role="radiogroup" aria-label="Active ratio">
+            <label class="at"><input type="radio" name="activeMetric" value="at" checked /> Asset turnover</label>
+            <label class="oe"><input type="radio" name="activeMetric" value="oe" /> Operating efficiency</label>
+            <label class="ie"><input type="radio" name="activeMetric" value="ie" /> Interest efficiency</label>
+            <label class="lv"><input type="radio" name="activeMetric" value="lv" /> Leverage</label>
+          </div>
+        </fieldset>
+
+        <div class="slider-shell" aria-label="Interactive sliders">
+          <div class="slider-row">
+            <div class="metric-name">
+              <strong><span class="dot" style="background: var(--blue2)"></span>Asset turnover</strong>
+              <small>Revenue generated per dollar of assets</small>
+            </div>
+            <div class="slider-wrap" data-metric="at" data-active="true">
+              <input id="slider-at" type="range" min="0" max="100" step="1" value="50" aria-label="Asset turnover slider" />
+            </div>
+            <div class="value-pill" id="value-at">0.705</div>
+          </div>
+
+          <div class="slider-row">
+            <div class="metric-name">
+              <strong><span class="dot" style="background: var(--blue)"></span>Operating efficiency</strong>
+              <small>Operating profit generated from sales</small>
+            </div>
+            <div class="slider-wrap" data-metric="oe" data-active="false">
+              <input id="slider-oe" type="range" min="0" max="100" step="1" value="50" aria-label="Operating efficiency slider" disabled />
+            </div>
+            <div class="value-pill" id="value-oe">0.217</div>
+          </div>
+
+          <div class="slider-row">
+            <div class="metric-name">
+              <strong><span class="dot" style="background: var(--rose)"></span>Interest efficiency</strong>
+              <small>Net income remaining after financing effects</small>
+            </div>
+            <div class="slider-wrap" data-metric="ie" data-active="false">
+              <input id="slider-ie" type="range" min="0" max="100" step="1" value="50" aria-label="Interest efficiency slider" disabled />
+            </div>
+            <div class="value-pill" id="value-ie">0.977</div>
+          </div>
+
+          <div class="slider-row">
+            <div class="metric-name">
+              <strong><span class="dot" style="background: var(--pink)"></span>Leverage</strong>
+              <small>Assets supported by equity</small>
+            </div>
+            <div class="slider-wrap" data-metric="lv" data-active="false">
+              <input id="slider-lv" type="range" min="0" max="100" step="1" value="50" aria-label="Leverage slider" disabled />
+            </div>
+            <div class="value-pill" id="value-lv">2.472</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card right-card" aria-live="polite">
+        <div class="topline">
+          <div>
+            <h2>Four line charts</h2>
+            <p>Each chart shows the full range of plausible movement. The dot, dashed line, and slider handles all move together.</p>
+          </div>
+          <span class="tag flat" id="changeTag">Balanced start</span>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-head"><strong>Asset turnover</strong><span id="diag-at">0.705</span></div>
+            <svg class="chart" id="chart-at" viewBox="0 0 320 180" role="img" aria-label="Asset turnover line chart">
+              <defs>
+                <linearGradient id="fill-at" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#006FFF" stop-opacity="0.24"/>
+                  <stop offset="100%" stop-color="#006FFF" stop-opacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <g class="grid"></g>
+              <path class="area" fill="url(#fill-at)"></path>
+              <path class="line"></path>
+              <line class="cross" x1="0" y1="0" x2="0" y2="0"></line>
+              <circle class="point" r="6"></circle>
+            </svg>
+            <div class="chart-meta"><span id="base-at">Baseline: 0.705</span><span id="chg-at">No change</span></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head"><strong>Operating efficiency</strong><span id="diag-oe">0.217</span></div>
+            <svg class="chart" id="chart-oe" viewBox="0 0 320 180" role="img" aria-label="Operating efficiency line chart">
+              <defs>
+                <linearGradient id="fill-oe" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#094183" stop-opacity="0.22"/>
+                  <stop offset="100%" stop-color="#094183" stop-opacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <g class="grid"></g>
+              <path class="area" fill="url(#fill-oe)"></path>
+              <path class="line"></path>
+              <line class="cross" x1="0" y1="0" x2="0" y2="0"></line>
+              <circle class="point" r="6"></circle>
+            </svg>
+            <div class="chart-meta"><span id="base-oe">Baseline: 0.217</span><span id="chg-oe">No change</span></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head"><strong>Interest efficiency</strong><span id="diag-ie">0.977</span></div>
+            <svg class="chart" id="chart-ie" viewBox="0 0 320 180" role="img" aria-label="Interest efficiency line chart">
+              <defs>
+                <linearGradient id="fill-ie" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#A30046" stop-opacity="0.24"/>
+                  <stop offset="100%" stop-color="#A30046" stop-opacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <g class="grid"></g>
+              <path class="area" fill="url(#fill-ie)"></path>
+              <path class="line"></path>
+              <line class="cross" x1="0" y1="0" x2="0" y2="0"></line>
+              <circle class="point" r="6"></circle>
+            </svg>
+            <div class="chart-meta"><span id="base-ie">Baseline: 0.977</span><span id="chg-ie">No change</span></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head"><strong>Leverage</strong><span id="diag-lv">2.472</span></div>
+            <svg class="chart" id="chart-lv" viewBox="0 0 320 180" role="img" aria-label="Leverage line chart">
+              <defs>
+                <linearGradient id="fill-lv" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#FF1E55" stop-opacity="0.24"/>
+                  <stop offset="100%" stop-color="#FF1E55" stop-opacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <g class="grid"></g>
+              <path class="area" fill="url(#fill-lv)"></path>
+              <path class="line"></path>
+              <line class="cross" x1="0" y1="0" x2="0" y2="0"></line>
+              <circle class="point" r="6"></circle>
+            </svg>
+            <div class="chart-meta"><span id="base-lv">Baseline: 2.472</span><span id="chg-lv">No change</span></div>
+          </div>
+        </div>
+
+        <p class="footer-note" id="liveNote">
+          The dashboard keeps the ratios in a plausible range and nudges the other three using directional trade-offs.
+        </p>
+      </article>
+    </section>
+
+    <section class="card insight-card">
+      <div class="head">
+        <div>
+          <h2>Quick reading guide</h2>
+          <p>Use this to help students interpret the direction of change.</p>
+        </div>
+      </div>
+
+      <div class="insight-grid">
+        <div class="summary-box">
+          <span class="label blue">Asset turnover</span>
+          <div class="num" id="insight-at">0.705</div>
+          <div class="change" id="insight-at-change">Baseline: 0.705</div>
+        </div>
+        <div class="summary-box">
+          <span class="label navy">Operating efficiency</span>
+          <div class="num" id="insight-oe">0.217</div>
+          <div class="change" id="insight-oe-change">Baseline: 0.217</div>
+        </div>
+        <div class="summary-box">
+          <span class="label rose">Interest efficiency</span>
+          <div class="num" id="insight-ie">0.977</div>
+          <div class="change" id="insight-ie-change">Baseline: 0.977</div>
+        </div>
+        <div class="summary-box">
+          <span class="label pink">Leverage</span>
+          <div class="num" id="insight-lv">2.472</div>
+          <div class="change" id="insight-lv-change">Baseline: 2.472</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const base = { at: 0.705, oe: 0.217, ie: 0.977, lv: 2.472 };
+
+    const limits = {
+      at: { min: 0.35, max: 1.10 },
+      oe: { min: 0.10, max: 0.35 },
+      ie: { min: 0.70, max: 1.00 },
+      lv: { min: 1.00, max: 4.00 }
+    };
+
+    const chartStyle = {
+      at: { stroke: '#006FFF' },
+      oe: { stroke: '#094183' },
+      ie: { stroke: '#A30046' },
+      lv: { stroke: '#FF1E55' }
+    };
+
+    // The slider t (0..1) drives the selected ratio; the other three move using realistic directional trade-offs.
+    const valueModel = {
+      at: t => clamp(0.53 + 0.24 * t - 0.10 * t * t, limits.at.min, limits.at.max),
+      oe: t => clamp(0.26 - 0.08 * t + 0.02 * t * t, limits.oe.min, limits.oe.max),
+      ie: t => clamp(0.99 - 0.025 * t - 0.01 * t * t, limits.ie.min, limits.ie.max),
+      lv: t => clamp(1.95 + 0.60 * t + 0.10 * t * t, limits.lv.min, limits.lv.max)
+    };
+
+    const el = {
+      radios: [...document.querySelectorAll('input[name="activeMetric"]')],
+      sliders: {
+        at: document.getElementById('slider-at'),
+        oe: document.getElementById('slider-oe'),
+        ie: document.getElementById('slider-ie'),
+        lv: document.getElementById('slider-lv')
+      },
+      vals: {
+        at: document.getElementById('value-at'),
+        oe: document.getElementById('value-oe'),
+        ie: document.getElementById('value-ie'),
+        lv: document.getElementById('value-lv')
+      },
+      diag: {
+        at: document.getElementById('diag-at'),
+        oe: document.getElementById('diag-oe'),
+        ie: document.getElementById('diag-ie'),
+        lv: document.getElementById('diag-lv')
+      },
+      base: {
+        at: document.getElementById('base-at'),
+        oe: document.getElementById('base-oe'),
+        ie: document.getElementById('base-ie'),
+        lv: document.getElementById('base-lv')
+      },
+      chg: {
+        at: document.getElementById('chg-at'),
+        oe: document.getElementById('chg-oe'),
+        ie: document.getElementById('chg-ie'),
+        lv: document.getElementById('chg-lv')
+      },
+      insights: {
+        at: document.getElementById('insight-at'),
+        oe: document.getElementById('insight-oe'),
+        ie: document.getElementById('insight-ie'),
+        lv: document.getElementById('insight-lv'),
+        atChange: document.getElementById('insight-at-change'),
+        oeChange: document.getElementById('insight-oe-change'),
+        ieChange: document.getElementById('insight-ie-change'),
+        lvChange: document.getElementById('insight-lv-change')
+      },
+      charts: {
+        at: document.getElementById('chart-at'),
+        oe: document.getElementById('chart-oe'),
+        ie: document.getElementById('chart-ie'),
+        lv: document.getElementById('chart-lv')
+      },
+      formulaValue: document.getElementById('formulaValue'),
+      liveNote: document.getElementById('liveNote'),
+      changeTag: document.getElementById('changeTag'),
+      activeWraps: [...document.querySelectorAll('.slider-wrap')]
+    };
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function lerp(min, max, t) {
+      return min + (max - min) * t;
+    }
+
+    function fmt(value) {
+      return Number(value).toFixed(3);
+    }
+
+    function formatDelta(prev, next) {
+      const diff = next - prev;
+      if (Math.abs(diff) < 0.0005) return 'No change';
+      return `${diff > 0 ? '+' : '-'}${Math.abs(diff).toFixed(3)}`;
+    }
+
+    function arrowFor(diff) {
+      if (Math.abs(diff) < 0.0005) return '->';
+      return diff > 0 ? 'up' : 'down';
+    }
+
+    function activeMetric() {
+      return el.radios.find(r => r.checked)?.value || 'at';
+    }
+
+    function setActive(metric) {
+      el.activeWraps.forEach(w => {
+        const isActive = w.dataset.metric === metric;
+        w.dataset.active = String(isActive);
+        w.querySelector('input').disabled = !isActive;
+      });
+    }
+
+    function buildPoints(metric, activeT) {
+      const svg = el.charts[metric];
+      const width = 320, height = 180;
+      const pad = { left: 14, right: 14, top: 12, bottom: 18 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      const min = limits[metric].min;
+      const max = limits[metric].max;
+
+      const pts = [];
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40;
+        const value = valueModel[metric](t);
+        const x = pad.left + plotW * t;
+        const y = pad.top + plotH * (1 - ((value - min) / (max - min)));
+        pts.push({ x, y, value });
+      }
+
+      const curr = valueModel[metric](activeT);
+      const cx = pad.left + plotW * activeT;
+      const cy = pad.top + plotH * (1 - ((curr - min) / (max - min)));
+      return { svg, pts, cx, cy, pad, plotW, plotH };
+    }
+
+    function pathFromPoints(points) {
+      return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ');
+    }
+
+    function drawChart(metric, activeT) {
+      const svg = el.charts[metric];
+      const grid = svg.querySelector('.grid');
+      const line = svg.querySelector('.line');
+      const area = svg.querySelector('.area');
+      const point = svg.querySelector('.point');
+      const cross = svg.querySelector('.cross');
+      const stroke = chartStyle[metric].stroke;
+      const { pts, cx, cy, pad, plotW, plotH } = buildPoints(metric, activeT);
+
+      if (!grid.dataset.ready) {
+        grid.innerHTML = '';
+        for (let i = 0; i <= 4; i++) {
+          const y = 12 + (136 * i / 4);
+          const row = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          row.setAttribute('x1', '14');
+          row.setAttribute('x2', '306');
+          row.setAttribute('y1', y);
+          row.setAttribute('y2', y);
+          row.setAttribute('class', 'gridline');
+          grid.appendChild(row);
+        }
+        grid.dataset.ready = 'true';
+      }
+
+      const path = pathFromPoints(pts);
+      const areaPath = `${path} L ${pad.left + plotW} ${pad.top + plotH} L ${pad.left} ${pad.top + plotH} Z`;
+
+      line.setAttribute('d', path);
+      line.setAttribute('stroke', stroke);
+
+      area.setAttribute('d', areaPath);
+      area.setAttribute('fill', `url(#fill-${metric})`);
+
+      point.setAttribute('cx', cx);
+      point.setAttribute('cy', cy);
+      point.setAttribute('fill', stroke);
+
+      cross.setAttribute('x1', cx);
+      cross.setAttribute('x2', cx);
+      cross.setAttribute('y1', pad.top);
+      cross.setAttribute('y2', pad.top + plotH);
+      cross.setAttribute('stroke', stroke);
+    }
+
+    function calculate(metric, sliderValue) {
+      const t = clamp(sliderValue / 100, 0, 1);
+      const s = 2 * t - 1; // -1..1
+      let at = base.at, oe = base.oe, ie = base.ie, lv = base.lv;
+
+      // Trade-off rules: simple, bounded, and directionally realistic.
+      if (metric === 'at') {
+        at = lerp(limits.at.min, limits.at.max, t);
+        oe = clamp(base.oe * (1 - 0.18 * s), limits.oe.min, limits.oe.max);
+        ie = clamp(base.ie * (1 - 0.05 * s), limits.ie.min, limits.ie.max);
+        lv = clamp(base.lv * (1 - 0.28 * s), limits.lv.min, limits.lv.max);
+      } else if (metric === 'oe') {
+        oe = lerp(limits.oe.min, limits.oe.max, t);
+        at = clamp(base.at * (1 - 0.14 * s), limits.at.min, limits.at.max);
+        ie = clamp(base.ie * (1 + 0.03 * s), limits.ie.min, limits.ie.max);
+        lv = clamp(base.lv * (1 - 0.18 * s), limits.lv.min, limits.lv.max);
+      } else if (metric === 'ie') {
+        ie = lerp(limits.ie.min, limits.ie.max, t);
+        lv = clamp(base.lv * (1 - 0.40 * s), limits.lv.min, limits.lv.max);
+        at = clamp(base.at * (1 + 0.06 * s), limits.at.min, limits.at.max);
+        oe = clamp(base.oe * (1 + 0.04 * s), limits.oe.min, limits.oe.max);
+      } else if (metric === 'lv') {
+        lv = lerp(limits.lv.min, limits.lv.max, t);
+        ie = clamp(base.ie * (1 - 0.33 * s), limits.ie.min, limits.ie.max);
+        at = clamp(base.at * (1 + 0.10 * s), limits.at.min, limits.at.max);
+        oe = clamp(base.oe * (1 - 0.06 * s), limits.oe.min, limits.oe.max);
+      }
+
+      const roe = at * oe * ie * lv;
+      return { at, oe, ie, lv, roe, t };
+    }
+
+    function valueToSlider(key, value) {
+      const min = limits[key].min;
+      const max = limits[key].max;
+      return Math.round(clamp(((value - min) / (max - min)) * 100, 0, 100));
+    }
+
+    let current = { ...base, roe: base.at * base.oe * base.ie * base.lv, t: 0.5 };
+
+    function render() {
+      const metric = activeMetric();
+      const slider = el.sliders[metric];
+      const prev = current;
+      current = calculate(metric, Number(slider.value));
+
+      // Move every lever so the other three are visibly changing too.
+      ['at', 'oe', 'ie', 'lv'].forEach(key => {
+        el.sliders[key].value = String(valueToSlider(key, current[key]));
+      });
+
+      ['at', 'oe', 'ie', 'lv'].forEach(key => {
+        const value = current[key];
+        el.vals[key].textContent = fmt(value);
+        el.diag[key].textContent = fmt(value);
+        el.base[key].textContent = `Baseline: ${base[key].toFixed(3)}`;
+        el.chg[key].textContent = formatDelta(base[key], value);
+
+        el.insights[key].textContent = fmt(value);
+        el.insights[`${key}Change`].textContent = `${value > base[key] + 0.0005 ? 'Up' : value < base[key] - 0.0005 ? 'Down' : 'No'} from baseline`;
+
+        const tForChart = clamp((value - limits[key].min) / (limits[key].max - limits[key].min), 0, 1);
+        drawChart(key, tForChart);
+      });
+
+      const roePct = current.roe * 100;
+      el.formulaValue.textContent = `Current ROE: ${roePct.toFixed(1)}%`;
+
+      const changed = ['at', 'oe', 'ie', 'lv'].filter(k => k !== metric && Math.abs(current[k] - prev[k]) > 0.0005);
+      const biggest = changed.length
+        ? changed.sort((a, b) => Math.abs(current[b] - prev[b]) - Math.abs(current[a] - prev[a]))[0]
+        : metric;
+      el.changeTag.textContent = `${biggest.toUpperCase()} moved`;
+      el.changeTag.className = `tag ${Math.abs(current[biggest] - prev[biggest]) < 0.0005 ? 'flat' : (current[biggest] > prev[biggest] ? 'up' : 'down')}`;
+
+      const note = {
+        at: 'Changing asset turnover shifts the other three ratios as well, not just the selected one.',
+        oe: 'Changing operating efficiency nudges asset turnover, interest efficiency, and leverage too.',
+        ie: 'Changing interest efficiency also moves the operational levers, especially leverage.',
+        lv: 'Changing leverage should be reflected in the other three charts, showing the trade-off.'
+      };
+      el.liveNote.textContent = note[metric];
+    }
+
+    function bind() {
+      el.radios.forEach(r => {
+        r.addEventListener('change', () => {
+          setActive(activeMetric());
+          el.sliders[activeMetric()].value = '50';
+          render();
+        });
+      });
+
+      Object.entries(el.sliders).forEach(([metric, slider]) => {
+        slider.addEventListener('input', () => {
+          if (metric !== activeMetric()) return;
+          render();
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (!e.altKey) return;
+        const map = { '1': 'at', '2': 'oe', '3': 'ie', '4': 'lv' };
+        if (!map[e.key]) return;
+        const radio = el.radios.find(r => r.value === map[e.key]);
+        if (!radio) return;
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
+    setActive(activeMetric());
+    render();
+    bind();
+  </script>
+</body>
+</html>
