@@ -108,7 +108,7 @@
       align-items:start;
     }
     .control-card{
-      padding:20px;
+      padding:16px;
     }
     .head{
       display:flex;
@@ -116,7 +116,7 @@
       gap:12px;
       align-items:baseline;
       flex-wrap:wrap;
-      margin-bottom:14px;
+      margin-bottom:10px;
     }
     .head h2, .right-card h2{
       margin:0;
@@ -134,12 +134,12 @@
       display:grid;
       grid-template-columns:repeat(4, minmax(0,1fr));
       gap:10px;
-      margin-bottom:18px;
+      margin-bottom:12px;
     }
     .selector label{
       border:1px solid var(--line);
       border-radius:16px;
-      padding:10px 12px;
+      padding:8px 10px;
       display:flex;
       gap:8px;
       align-items:center;
@@ -156,8 +156,8 @@
     .selector .lv{border-color:rgba(255,30,85,.35)}
 
     .slider-shell{
-      padding:16px;
-      border-radius:18px;
+      padding:12px;
+      border-radius:16px;
       background:linear-gradient(180deg, rgba(132,184,255,.12), rgba(255,170,188,.06));
       border:1px solid rgba(9,65,131,.08);
     }
@@ -166,7 +166,7 @@
       grid-template-columns:170px 1fr 84px;
       gap:14px;
       align-items:center;
-      margin-bottom:12px;
+      margin-bottom:8px;
     }
     .slider-row:last-child{margin-bottom:0}
     .metric-name{
@@ -573,37 +573,6 @@
       </article>
     </section>
 
-    <section class="card insight-card">
-      <div class="head">
-        <div>
-          <h2>Quick reading guide</h2>
-          <p>Use this to help students interpret the direction of change.</p>
-        </div>
-      </div>
-
-      <div class="insight-grid">
-        <div class="summary-box">
-          <span class="label blue">Asset turnover</span>
-          <div class="num" id="insight-at">0.705</div>
-          <div class="change" id="insight-at-change">Baseline: 0.705</div>
-        </div>
-        <div class="summary-box">
-          <span class="label navy">Operating efficiency</span>
-          <div class="num" id="insight-oe">0.217</div>
-          <div class="change" id="insight-oe-change">Baseline: 0.217</div>
-        </div>
-        <div class="summary-box">
-          <span class="label rose">Interest efficiency</span>
-          <div class="num" id="insight-ie">0.977</div>
-          <div class="change" id="insight-ie-change">Baseline: 0.977</div>
-        </div>
-        <div class="summary-box">
-          <span class="label pink">Leverage</span>
-          <div class="num" id="insight-lv">2.472</div>
-          <div class="change" id="insight-lv-change">Baseline: 2.472</div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <script>
@@ -662,16 +631,6 @@
         oe: document.getElementById('chg-oe'),
         ie: document.getElementById('chg-ie'),
         lv: document.getElementById('chg-lv')
-      },
-      insights: {
-        at: document.getElementById('insight-at'),
-        oe: document.getElementById('insight-oe'),
-        ie: document.getElementById('insight-ie'),
-        lv: document.getElementById('insight-lv'),
-        atChange: document.getElementById('insight-at-change'),
-        oeChange: document.getElementById('insight-oe-change'),
-        ieChange: document.getElementById('insight-ie-change'),
-        lvChange: document.getElementById('insight-lv-change')
       },
       charts: {
         at: document.getElementById('chart-at'),
@@ -850,9 +809,6 @@
         el.diag[key].textContent = fmt(value);
         el.base[key].textContent = `Baseline: ${base[key].toFixed(3)}`;
         el.chg[key].textContent = formatDelta(base[key], value);
-
-        el.insights[key].textContent = fmt(value);
-        el.insights[`${key}Change`].textContent = `${value > base[key] + 0.0005 ? 'Up' : value < base[key] - 0.0005 ? 'Down' : 'No'} from baseline`;
 
         const tForChart = clamp((value - limits[key].min) / (limits[key].max - limits[key].min), 0, 1);
         drawChart(key, tForChart);
