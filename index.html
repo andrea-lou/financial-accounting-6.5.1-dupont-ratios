@@ -380,6 +380,31 @@
       line-height:1.5;
     }
 
+    .window-button{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 13px;
+      border:1px solid rgba(9,65,131,.18);
+      border-radius:12px;
+      background:#fff;
+      color:var(--blue);
+      font:inherit;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(9,65,131,.08);
+      white-space:nowrap;
+    }
+    .window-button:hover{
+      background:#f4f8ff;
+      border-color:rgba(9,65,131,.30);
+    }
+    .window-button:focus-visible{
+      outline:3px solid rgba(0,111,255,.25);
+      outline-offset:2px;
+    }
+
     @media (max-width: 1020px){
       .hero, .main-grid, .insight-grid{grid-template-columns:1fr}
       .selector{grid-template-columns:repeat(2, minmax(0,1fr))}
@@ -399,6 +424,9 @@
 </head>
 <body>
   <main class="wrap">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+      <button class="window-button" id="openWindowButton" type="button">Open in new window</button>
+    </div>
     <section class="hero">
       <article class="card title-card">
         <div class="eyebrow">Interactive DuPont trade-off simulator</div>
@@ -839,6 +867,23 @@
     }
 
     function bind() {
+      const openWindowButton = document.getElementById('openWindowButton');
+      if (openWindowButton) {
+        openWindowButton.addEventListener('click', () => {
+          const newWindow = window.open(window.location.href, '_blank');
+          if (newWindow) {
+            newWindow.focus();
+            newWindow.addEventListener('load', () => {
+              const docEl = newWindow.document.documentElement;
+              if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(() => {});
+              } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen();
+              }
+            }, { once: true });
+          }
+        });
+      }
       el.radios.forEach(r => {
         r.addEventListener('change', () => {
           setActive(activeMetric());
